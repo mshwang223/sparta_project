@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- USER CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <title>메이킹첼린지 | 메인 화면</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <script>
+        $(document).ready(function () {
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+            if (userInfo) {
+                chkAuthor(parseInt(userInfo['author']), userInfo['name']);
+            } else {
+                chkAuthor(0, "");
+            }
+
+            listing();
+        });
+
+        function chkAuthor(num, name) {
+            let tmp_html = ``;
+            let head_html = ``;
+
+            if (num === 1) {
+                head_html = `
+                            <label class="col-form-label font-contents">관리자 ${name}님 환영합니다!</label>
+                `;
+                tmp_html = `
+                            <div class="form-group row">
+                                <button type="button" onclick="btnAdmin()" class="btn btn-success mybtn">사용자 관리</button>
+                            </div>
+                `;
+                $('#txtHead').append(head_html);
+                $('#btnFooter').append(tmp_html);
+            } else if (num === 2) {
+                head_html = `
+                            <label class="col-form-label font-contents">사용자 ${name}님 환영합니다!</label>
+                `;
+                $('#txtHead').append(head_html);
+            } else if (num === 0) {
+                head_html = `
+                            <label class="col-form-label font-contents">방문자님 환영합니다!</label>
+                `;
+                $('#txtHead').append(head_html);
+                $('.mybtn').text('로그인 하기');
+            }
+        }
+
+        function listing() {
+            $.ajax({
+                type: "GET",
+                url: "/diary/lists",
+                data: {},
+                success: function (response) {
+                    const diaries = response['diary_info'];
+                    const dates = response['diary_date'];
+
+                    for (let i = 0; i < dates.length; i++) {
+                        let cntDate = dates[i]['_id'];
+                        let cnt_html = `
+                            <h5 style="margin-left: 5px">날짜 : ${cntDate}</h5>
+                            <div id="cards-box" class="cnt-contents">
+                            </div>
+                        `;
+
+                        $('.div-contents').append(cnt_html);
+
+                        for (let j = 0; j < diaries.length; j++) {
+                            let date = diaries[j]['date'];
+                            let location = diaries[j]['location'];
+                            let angry = diaries[j]['angry'];
+                            let target = diaries[j]['target'];
+                            let reason = diaries[j]['reason'];
+                            let contents = diaries[j]['contents'];
+                            let name = diaries[j]['name'];
+
+                            if (cntDate === date) {
+                                let tmp_html = `
+                                            <div class="card" style="display: inline-block; width:200px; margin: auto auto 10px 5px">
+                                                <div class="card-body">
+                                                    <a target="_blank" class="card-title">${date}</a>
+                                                    <a target="_blank" class="card-title">${name}</a>
+                                                    <p class="card-text">${contents}</p>
+                                                </div>
+                                            </div>
+                                            `;
+                                $(".cnt-contents:eq("+i+")").append(tmp_html);
+                            }
+                            continue;
+                        }
+                    }
+                }
+            })
+        }
+
+        function btnAdmin() {
+            window.location.href = '/admin';
+        }
+
+        function btnDiary() {
+            window.location.href = '/diary';
+        }
+
+        function btnLogout() {
+            window.location.href = '/';
+        }
+    </script>
+</head>
+<body>
+    <div class="warp">
+        <div class="push">
+            <div id="txtHead"></div>
+        </div>
+        <h1 align="center" style="margin: 30px auto 30px auto">메인 화면</h1>
+        <div class="div-contents"></div>
+    </div>
+    <footer class="footer">
+        <div style="display:flex" id="btnFooter">
+            <div class="form-group row">
+                <button type="button" onclick="btnLogout()" class="btn btn-success mybtn">로그아웃</button>
+            </div>
+            <div class="form-group row">
+                <button type="button" onclick="btnDiary()" class="btn btn-success mybtn">감정일기</button>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

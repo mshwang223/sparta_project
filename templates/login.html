@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- USER CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <title>메이킹첼린지 | 로그인 화면</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+</head>
+<script>
+    $(document).ready(function () {
+        localStorage.clear();
+    });
+
+   function btnGuest() {
+        localStorage.setItem("userGuest", true);
+        window.location.href = "/main";
+   }
+
+   function btnLogin() {
+        let loginId = $('#loginId').val();
+        let loginPw = $('#loginPw').val();
+
+        if(loginId === ''){
+            alert('ID를 입력해주세요.');
+            $('#loginId').focus();
+            return;
+        } else if(loginPw === '') {
+            alert('PW를 입력해주세요.');
+            $('#loginPw').focus();
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "/login",
+            data: {
+                loginId_give: loginId,
+                loginPw_give: loginPw
+            },
+            success: function (response) { // 성공하면
+                alert(response["msg"]);
+
+                const userInfo = response['user_info'];
+                localStorage.setItem("userInfo", JSON.stringify(userInfo));
+                window.location.href = '/main';
+            },
+            error: function () {
+                alert("ID 또는 PW를 잘못 입력했습니다!\n다시 입력해 주세요!");
+                $('#loginId').val('');
+                $('#loginPw').val('');
+                $('#loginId').focus();
+            }
+        })
+   }
+</script>
+<body>
+    <div class="warp">
+        <div class="guestSize" style="width:25%">
+            <label class="col-form-label font-contents">로그인</label>
+        </div>
+        <div style="border: 2px solid green">
+            <div style="margin: 50px 50px 30px">
+                <div class="form-group row">
+                    <label class="col-form-label font-contents">아이디</label>
+                    <div>
+                        <input id="loginId" class="form-control" placeholder="ID" size="32">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-form-label font-contents">패스워드</label>
+                    <div>
+                        <input type="password" id="loginPw" class="form-control" placeholder="Password" size="32">
+                    </div>
+                </div>
+
+                <div class="form-group row" style="display: flex">
+                    <a href="/contact" class="btn btn-success mybtn">회원가입</a>
+                    <button type="button" onclick="btnLogin()" class="btn btn-success mybtn">로그인</button>
+                </div>
+            </div>
+        </div>
+        <div class="guestSize" onclick="btnGuest()">
+            <label class="col-form-label font-contents">Guest 입장</label>
+        </div>
+    </div>
+</body>
+</html>

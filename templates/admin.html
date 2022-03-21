@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- USER CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <title>메이킹첼린지 | 사용자관리 화면</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <script>
+        $(document).ready(function () {
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+            const head_html = `<label class="col-form-label font-contents">관리자 ${userInfo['name']}님 환영합니다!</label>`;
+            const tmp_html = `<button type="button" onclick="btnMain()" class="btn btn-success mybtn">메인 화면</button>`;
+            $('#txtHead').append(head_html);
+            $('#btnFooter').append(tmp_html);
+
+            listing();
+        });
+
+        function listing() {
+            $.ajax({
+                type: "GET",
+                url: "/users",
+                data: {},
+                success: function (response) {
+                    let users = response['users_info'];
+
+                    for (let i = 0; i < users.length; i++) {
+                        let no = i + 1;
+                        let name = users[i]['name'];
+                        let id = users[i]['id'];
+                        let pw = users[i]['pw'];
+                        let author = users[i]['author'];
+
+                        let tmp_html = ``;
+
+                        if (author === "1") {
+                            tmp_html = `<tr>
+                                             <td><input type="checkbox" name="selected"></td>
+                                             <td class="editable">${no}</td>
+                                             <td class="editable">${id}</td>
+                                             <td class="editable">${pw}</td>
+                                             <td class="editable">${name}</td>
+                                             <td class="editable">관리자</td>
+                                        </tr>
+                            `;
+                        } else {
+                            tmp_html = `<tr>
+                                             <td><input type="checkbox" name="selected"></td>
+                                             <td class="editable">${no}</td>
+                                             <td class="editable">${id}</td>
+                                             <td class="editable">${pw}</td>
+                                             <td class="editable">${name}</td>
+                                             <td class="editable">사용자</td>
+                                        </tr>
+                            `;
+                        }
+                        $('#users').append(tmp_html);
+                    }
+                }
+            })
+
+            // 전체 체크 해제 기능
+            $('input[name=selected_all]').on('change', function () {
+                $('input[name=selected]').prop('checked', this.checked);
+            });
+        }
+
+        function btnSave() {
+            let userID = $('#userId').val();
+            let userPW = $('#userPw').val();
+            let userNM = $('#userName').val();
+            let userAUTH = $('#userAuth').val();
+            let chkBtn = 0;
+
+            if (userID === ''){
+                alert('ID를 입력해 주세요.');
+                $('#userId').focus();
+                return;
+            } else if (userNM === '') {
+                alert('이름을 입력해 주세요.');
+                $('#userName').focus();
+                return;
+            } else if (userPW === '') {
+                alert('PW를 입력해 주세요.');
+                $('#userPw').focus();
+                return;
+            } else if (!(userAUTH === "1" || userAUTH === "2")) {
+                alert('권한을 지정해 주세요. 1과 2만 지정할 수 있습니다.');
+                $('#userAuth').focus();
+                return;
+            }
+
+            if ($("#btnSave").text() === "수정") {
+                chkBtn = 1;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/users",
+                data: {
+                    id_give: userID,
+                    pw_give: userPW,
+                    nm_give: userNM,
+                    au_give: userAUTH,
+                    chk_btn: chkBtn,
+                    tmp_id: tmp_id,
+                    tmp_pw: tmp_pw
+                },
+                success: function (response) { // 성공하면
+                    alert(response["msg"]);
+                    if (response["result"] === 'success')
+                        window.location.reload();
+                    else
+                        $('#userId').focus();
+                }
+            });
+        }
+
+        // checked 된 Data 확인
+        function chkData(data) {
+            let checkbox = $('input[name=selected]:checked');
+
+            checkbox.each(function(i){
+                let tr = checkbox.parent().parent().eq(i);
+                let td = tr.children();
+
+				let no = td.eq(1).text();
+				let userid = td.eq(2).text();
+				let userpw = td.eq(3).text();
+				let name = td.eq(4).text();
+
+                data[i] = {
+                  no: no,
+                  userid: userid,
+                  userpw: userpw,
+                  name: name
+                };
+            });
+        }
+
+        function btnDel() {
+            const rowData = [];
+            chkData(rowData);
+
+            if(rowData == false) {
+                alert("체크항목이 없습니다.");
+                return;
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: '/users/delete',
+                data: {users_data:JSON.stringify(rowData)},
+                success: function (response) {
+                    alert(response['msg']);
+                    window.location.reload();
+                }
+            });
+        }
+
+        let tmp_id = "";
+        let tmp_pw = "";
+        // 테이블 선택할 때마다 발생되는 이벤트
+        $(document).on("click", ".editable", function () {
+			const checkRows = $(this).parent().children();
+            const tdArr = [];
+
+            checkRows.each(function(i){
+				tdArr.push(checkRows.eq(i).text());
+			});
+
+            // update pk 값 대신 사용
+            tmp_id = tdArr[2];
+            tmp_pw = tdArr[3];
+
+            chkUsers(tdArr);
+        });
+
+        function chkUsers(data) {
+            $("#showPop").show();
+            $("#btnAdd").text("닫기");
+            $("#btnSave").text("수정");
+            $("#tableContents").hide();
+
+            $("#userId").val(data[2]);
+            $("#userPw").val(data[3]);
+            $("#userName").val(data[4]);
+
+            if (data[5] === "관리자") {
+                $("#userAuth").val('1');
+            } else {
+                $("#userAuth").val('2');
+            }
+        }
+
+        function openClose() {
+            if ($("#showPop").css("display") == "block") {
+                $("#showPop").hide();
+                $("#tableContents").show();
+                $("#btnAdd").text("추가");
+                $("#btnSave").text("저장");
+                $("#userId").val("");
+                $("#userPw").val("");
+                $("#userName").val("");
+                $("#userAuth").val("");
+            } else {
+                $("#showPop").show();
+                $("#tableContents").hide();
+                $("#btnAdd").text("닫기");
+            }
+        }
+
+        function btnMain(){
+            window.location.href = '/main';
+        }
+    </script>
+</head>
+<body>
+    <div class="warp">
+        <div class="push">
+            <div id="txtHead"></div>
+        </div>
+        <h1 align="center" style="margin: 30px auto 30px auto">사용자관리 화면</h1>
+        <div class="div-contents" style="width: 800px; margin: auto">
+            <div>
+                <button type="button" onclick="openClose()" id="btnAdd" class="btn btn-success tbtn">추가</button>
+                <button type="button" onclick="btnDel()" class="btn btn-success tbtn">삭제</button>
+            </div>
+
+            <div id="showPop" class="form-post" style="display:none">
+                <div style="margin-left: 20px">
+                    <div class="form-group row">
+                        <label class="col-form-label pop-contents">ID</label>
+                        <div>
+                            <input id="userId" class="form-control" placeholder="ID" size="30">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label pop-contents">PW</label>
+                        <div>
+                            <input id="userPw" class="form-control" placeholder="PW" size="30">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label pop-contents">이름</label>
+                        <div>
+                            <input id="userName" class="form-control" placeholder="NAME" size="30">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label pop-contents">권한</label>
+                        <div>
+                            <input id="userAuth" class="form-control" placeholder="1: 관리자    2: 사용자" size="30">
+                        </div>
+                    </div>
+                    <button type="button" onclick="btnSave()" class="btn btn-success tbtn" id="btnSave" style="display: block">저장</button>
+                </div>
+            </div>
+
+            <div id="tableContents">
+                <table class="table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col" width="50px"><input type="checkbox" name="selected_all"></th>
+                        <th scope="col" width="50px">No</th>
+                        <th scope="col" width="200px">ID</th>
+                        <th scope="col" width="200px">PW</th>
+                        <th scope="col" width="200px">이름</th>
+                        <th scope="col" width="100px">권한</th>
+                    </tr>
+                    </thead>
+                    <tbody id="users">
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        <div style="display:flex" id="btnFooter">
+            <div class="form-group row"></div>
+        </div>
+    </footer>
+</body>
+</html>
